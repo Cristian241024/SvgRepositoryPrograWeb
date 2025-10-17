@@ -1,0 +1,69 @@
+@media (max-width: 768px) {
+    .toolbar {
+        flex-direction: column;
+        padding: 0.5rem;
+    }
+    
+    .toolbar h1 {
+        font-size: 1.2rem;
+    }
+    
+    .toolbar-section {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+    
+    .tool-btn, .action-btn {
+        padding: 0.4rem 0.8rem;
+        font-size: 0.9rem;
+    }
+    
+    .modal-content {
+        width: 95%;
+        margin: 10% auto;
+        padding: 1.5rem;
+    }
+    
+    .element-text {
+        font-size: 12px;
+    }
+}
+
+@media (max-width: 480px) {
+    .toolbar-section {
+        gap: 0.3rem;
+    }
+    
+    .tool-btn, .action-btn {
+        padding: 0.3rem 0.6rem;
+        font-size: 0.8rem;
+    }
+    
+    .modal-content {
+        margin: 5% auto;
+        padding: 1rem;
+    }
+    
+    .modal-actions {
+        flex-direction: column;
+    }
+    
+    .element-text {
+        font-size: 10px;
+    }
+}
+
+@media (orientation: landscape) and (max-height: 500px) {
+    .toolbar {
+        padding: 0.3rem;
+    }
+    
+    .toolbar h1 {
+        font-size: 1rem;
+    }
+    
+    .tool-btn, .action-btn {
+        padding: 0.2rem 0.5rem;
+        font-size: 0.8rem;
+    }
+}
