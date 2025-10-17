@@ -6,23 +6,17 @@ class App {
     }
 
     init() {
-        // Initialize components
         const svg = document.getElementById('flowchart-canvas');
         this.flowchartEditor = new FlowchartEditor(svg);
         this.storageManager = new StorageManager();
         
-        // Make editor globally available for auto-save
         window.flowchartEditor = this.flowchartEditor;
         
-        // Initialize event listeners
         this.initializeEventListeners();
-        
-        // Load auto-saved data if available
         this.loadAutoSave();
     }
 
     initializeEventListeners() {
-        // Tool buttons
         document.querySelectorAll('.tool-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 const tool = e.target.getAttribute('data-tool');
@@ -30,29 +24,24 @@ class App {
             });
         });
 
-        // Action buttons
         document.getElementById('btn-save').addEventListener('click', () => this.showSaveModal());
         document.getElementById('btn-load').addEventListener('click', () => this.showLoadModal());
         document.getElementById('btn-export').addEventListener('click', () => this.exportDiagram());
         document.getElementById('btn-import').addEventListener('click', () => this.importDiagram());
         document.getElementById('btn-clear').addEventListener('click', () => this.clearDiagram());
 
-        // Modal events
         document.getElementById('confirm-save').addEventListener('click', () => this.saveDiagram());
         document.getElementById('cancel-save').addEventListener('click', () => Utils.hideModal('save-modal'));
         document.getElementById('cancel-load').addEventListener('click', () => Utils.hideModal('load-modal'));
 
-        // Import file handler
         document.getElementById('import-file').addEventListener('change', (e) => this.handleFileImport(e));
 
-        // Modal close on outside click
         document.addEventListener('click', (e) => {
             if (e.target.classList.contains('modal')) {
                 e.target.style.display = 'none';
             }
         });
 
-        // Diagram name input enter key
         document.getElementById('diagram-name').addEventListener('keypress', (e) => {
             if (e.key === 'Enter') {
                 this.saveDiagram();
@@ -61,11 +50,6 @@ class App {
     }
 
     selectTool(tool, button) {
-        // Update UI
-        document.querySelectorAll('.tool-btn').forEach(btn => btn.classList.remove('active'));
-        button.classList.add('active');
-        
-        // Set tool in editor
         this.flowchartEditor.setTool(tool);
     }
 
@@ -73,7 +57,6 @@ class App {
         const modal = document.getElementById('save-modal');
         const input = document.getElementById('diagram-name');
         
-        // Generate default name
         const date = new Date();
         const defaultName = `Diagrama_${date.getFullYear()}-${(date.getMonth()+1).toString().padStart(2,'0')}-${date.getDate().toString().padStart(2,'0')}_${date.getHours().toString().padStart(2,'0')}-${date.getMinutes().toString().padStart(2,'0')}`;
         
@@ -105,7 +88,6 @@ class App {
         const modal = document.getElementById('load-modal');
         const container = document.getElementById('saved-diagrams');
         
-        // Clear previous content
         container.innerHTML = '';
         
         const diagrams = this.storageManager.getAllDiagrams();
@@ -128,7 +110,6 @@ class App {
                     <button class="delete-diagram" data-name="${name}">Eliminar</button>
                 `;
                 
-                // Load diagram event
                 diagramElement.addEventListener('click', (e) => {
                     if (!e.target.classList.contains('delete-diagram')) {
                         this.loadDiagram(name);
@@ -136,12 +117,11 @@ class App {
                     }
                 });
                 
-                // Delete diagram event
                 diagramElement.querySelector('.delete-diagram').addEventListener('click', (e) => {
                     e.stopPropagation();
                     if (confirm(`¿Estás seguro de eliminar "${name}"?`)) {
                         this.storageManager.deleteDiagram(name);
-                        this.showLoadModal(); // Refresh the modal
+                        this.showLoadModal();
                     }
                 });
                 
@@ -187,7 +167,6 @@ class App {
                 try {
                     const data = JSON.parse(event.target.result);
                     
-                    // Validate data structure
                     if (data.diagram && data.diagram.elements && data.diagram.connections) {
                         this.flowchartEditor.importData(data.diagram);
                         this.showNotification('Diagrama importado exitosamente', 'success');
@@ -204,7 +183,6 @@ class App {
             alert('Por favor, selecciona un archivo JSON válido.');
         }
         
-        // Reset file input
         e.target.value = '';
     }
 
@@ -222,7 +200,6 @@ class App {
             const timeDiff = new Date() - new Date(autoSaveData.timestamp);
             const hours = timeDiff / (1000 * 60 * 60);
             
-            // Only load if auto-save is less than 24 hours old
             if (hours < 24) {
                 if (confirm('Se encontró un diagrama guardado automáticamente. ¿Deseas cargarlo?')) {
                     this.flowchartEditor.importData(autoSaveData.data);
@@ -232,12 +209,10 @@ class App {
     }
 
     showNotification(message, type = 'info') {
-        // Create notification element
         const notification = document.createElement('div');
         notification.className = `notification notification-${type}`;
         notification.textContent = message;
         
-        // Style the notification
         Object.assign(notification.style, {
             position: 'fixed',
             top: '20px',
@@ -252,7 +227,6 @@ class App {
             maxWidth: '300px'
         });
         
-        // Set background color based on type
         switch (type) {
             case 'success':
                 notification.style.backgroundColor = '#4CAF50';
@@ -267,15 +241,12 @@ class App {
                 notification.style.backgroundColor = '#2196F3';
         }
         
-        // Add to DOM and show
         document.body.appendChild(notification);
         
-        // Trigger animation
         setTimeout(() => {
             notification.style.opacity = '1';
         }, 100);
         
-        // Remove after 3 seconds
         setTimeout(() => {
             notification.style.opacity = '0';
             setTimeout(() => {
@@ -287,7 +258,6 @@ class App {
     }
 }
 
-// Initialize app when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
     new App();
 });

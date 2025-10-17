@@ -10,27 +10,37 @@ class FlowchartEditor {
         this.connectionStart = null;
         this.tempLine = null;
         
+        this.handleCanvasClick = this.handleCanvasClick.bind(this);
+        this.handleMouseDown = this.handleMouseDown.bind(this);
+        this.handleMouseMove = this.handleMouseMove.bind(this);
+        this.handleMouseUp = this.handleMouseUp.bind(this);
+        this.handleKeyDown = this.handleKeyDown.bind(this);
+        
         this.initializeEventListeners();
     }
 
     initializeEventListeners() {
-        // Canvas click events
-        this.svg.addEventListener('click', (e) => this.handleCanvasClick(e));
-        this.svg.addEventListener('mousedown', (e) => this.handleMouseDown(e));
-        this.svg.addEventListener('mousemove', (e) => this.handleMouseMove(e));
-        this.svg.addEventListener('mouseup', (e) => this.handleMouseUp(e));
-        
-        // Prevent context menu
+        this.svg.addEventListener('click', this.handleCanvasClick);
+        this.svg.addEventListener('mousedown', this.handleMouseDown);
+        this.svg.addEventListener('mousemove', this.handleMouseMove);
+        this.svg.addEventListener('mouseup', this.handleMouseUp);
         this.svg.addEventListener('contextmenu', (e) => e.preventDefault());
-        
-        // Keyboard events
-        document.addEventListener('keydown', (e) => this.handleKeyDown(e));
+        document.addEventListener('keydown', this.handleKeyDown);
     }
 
     setTool(tool) {
         this.currentTool = tool;
         this.selectedElement = null;
         this.updateCursor();
+        
+        document.querySelectorAll('.tool-btn').forEach(btn => {
+            btn.classList.remove('active');
+        });
+        
+        if (tool) {
+            const toolBtn = document.querySelector(`[data-tool="${tool}"]`);
+            if (toolBtn) toolBtn.classList.add('active');
+        }
     }
 
     updateCursor() {
@@ -47,6 +57,76 @@ class FlowchartEditor {
         if (e.target === this.svg && this.currentTool && this.currentTool !== 'connector') {
             const pos = Utils.getMousePosition(e, this.svg);
             this.createElement(this.currentTool, pos.x, pos.y);
+        }
+    }
+
+    handleMouseDown(e) {
+        e.preventDefault();
+        
+        // Check if clicking on a connection point
+        const connectionPoint = e.target.closest('.connection-point');
+        const element = e.target.closest('.flowchart-element');
+        
+        if (this.currentTool === 'connector') {
+            if (connectionPoint && element) {
+                const id = element.getAttribute('data-id');
+                const pointIndex = parseInt(connectionPoint.getAttribute('data-point'));
+                this.startConnection(id, pointIndex, e);
+            }
+        } else if (element) {
+            const id = element.getAttribute('data-id');
+            this.startDrag(id, e);
+        }
+    }
+
+    handleMouseMove(e) {
+        if (this.isDragging && this.selectedElement) {
+            const pos = Utils.getMousePosition(e, this.svg);
+            const newX = pos.x - this.dragOffset.x;
+            const newY = pos.y - this.dragOffset.y;
+            this.moveElement(this.selectedElement, newX, newY);
+        } else if (this.tempLine) {
+            const pos = Utils.getMousePosition(e, this.svg);
+            this.tempLine.setAttribute('x2', pos.x);
+            this.tempLine.setAttribute('y2', pos.y);
+        }
+    }
+
+    handleMouseUp(e) {
+        if (this.tempLine) {
+            const connectionPoint = e.target.closest('.connection-point');
+            const element = e.target.closest('.flowchart-element');
+            
+            if (connectionPoint && element) {
+                const endElementId = element.getAttribute('data-id');
+                const endPoint = parseInt(connectionPoint.getAttribute('data-point'));
+                
+                if (endElementId !== this.connectionStart.elementId) {
+                    this.createConnection(
+                        this.connectionStart.elementId,
+                        this.connectionStart.point,
+                        endElementId,
+                        endPoint
+                    );
+                }
+            }
+            
+            this.svg.removeChild(this.tempLine);
+            this.tempLine = null;
+            this.connectionStart = null;
+        }
+        
+        this.isDragging = false;
+    }
+
+    handleKeyDown(e) {
+        if (e.key === 'Delete' && this.selectedElement) {
+            this.deleteElement(this.selectedElement);
+        } else if (e.key === 'Escape') {
+            this.selectedElement = null;
+            this.currentTool = null;
+            this.updateCursor();
+            document.querySelectorAll('.tool-btn').forEach(btn => btn.classList.remove('active'));
         }
     }
 
@@ -76,6 +156,7 @@ class FlowchartEditor {
             text: this.getDefaultText(type)
         });
 
+        // Asegurar que el nuevo elemento esté al frente
         this.svg.appendChild(element);
         this.selectElement(id);
     }
@@ -98,7 +179,6 @@ class FlowchartEditor {
         text.setAttribute('class', 'element-text');
         text.textContent = 'Inicio';
 
-        // Connection points
         this.addConnectionPoints(group, [
             { x: 0, y: -30 }, { x: 60, y: 0 }, { x: 0, y: 30 }, { x: -60, y: 0 }
         ]);
@@ -130,7 +210,6 @@ class FlowchartEditor {
         text.setAttribute('class', 'element-text');
         text.textContent = 'Proceso';
 
-        // Connection points
         this.addConnectionPoints(group, [
             { x: 0, y: -25 }, { x: 75, y: 0 }, { x: 0, y: 25 }, { x: -75, y: 0 }
         ]);
@@ -158,7 +237,6 @@ class FlowchartEditor {
         text.setAttribute('class', 'element-text');
         text.textContent = '¿Decisión?';
 
-        // Connection points
         this.addConnectionPoints(group, [
             { x: 0, y: -35 }, { x: 70, y: 0 }, { x: 0, y: 35 }, { x: -70, y: 0 }
         ]);
@@ -177,33 +255,36 @@ class FlowchartEditor {
             circle.setAttribute('class', 'connection-point');
             circle.setAttribute('cx', point.x);
             circle.setAttribute('cy', point.y);
+            circle.setAttribute('r', 6);
             circle.setAttribute('data-point', index);
+            circle.style.pointerEvents = 'all';
             group.appendChild(circle);
         });
     }
 
     addElementEventListeners(element, id) {
-        element.addEventListener('mousedown', (e) => {
-            e.stopPropagation();
-            if (this.currentTool === 'connector') {
-                this.startConnection(id, e);
-            } else {
-                this.startDrag(id, e);
-            }
-        });
-
+        // Hacer que el grupo sea clickeable
+        element.style.pointerEvents = 'all';
+        
         element.addEventListener('dblclick', (e) => {
             e.stopPropagation();
-            this.editElementText(id);
+            e.preventDefault();
+            if (this.currentTool !== 'connector') {
+                this.editElementText(id);
+            }
         });
 
         element.addEventListener('click', (e) => {
             e.stopPropagation();
-            this.selectElement(id);
+            if (this.currentTool !== 'connector') {
+                this.selectElement(id);
+            }
         });
     }
 
     startDrag(id, e) {
+        if (this.currentTool === 'connector') return;
+        
         this.isDragging = true;
         this.selectedElement = id;
         const pos = Utils.getMousePosition(e, this.svg);
@@ -217,71 +298,36 @@ class FlowchartEditor {
         this.selectElement(id);
     }
 
-    startConnection(id, e) {
-        if (e.target.classList.contains('connection-point')) {
-            this.connectionStart = {
-                elementId: id,
-                point: parseInt(e.target.getAttribute('data-point'))
-            };
-            
-            const elementData = this.elements.get(id);
-            const startPos = this.getConnectionPointPosition(elementData, this.connectionStart.point);
-            
-            this.tempLine = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-            this.tempLine.setAttribute('x1', startPos.x);
-            this.tempLine.setAttribute('y1', startPos.y);
-            this.tempLine.setAttribute('x2', startPos.x);
-            this.tempLine.setAttribute('y2', startPos.y);
-            this.tempLine.setAttribute('stroke', '#999');
-            this.tempLine.setAttribute('stroke-width', '2');
-            this.tempLine.setAttribute('stroke-dasharray', '5,5');
-            
-            this.svg.appendChild(this.tempLine);
-        }
-    }
-
-    handleMouseMove(e) {
-        if (this.isDragging && this.selectedElement) {
-            const pos = Utils.getMousePosition(e, this.svg);
-            const newX = pos.x - this.dragOffset.x;
-            const newY = pos.y - this.dragOffset.y;
-            
-            this.moveElement(this.selectedElement, newX, newY);
-        } else if (this.tempLine) {
-            const pos = Utils.getMousePosition(e, this.svg);
-            this.tempLine.setAttribute('x2', pos.x);
-            this.tempLine.setAttribute('y2', pos.y);
-        }
-    }
-
-    handleMouseUp(e) {
-        if (this.tempLine) {
-            if (e.target.classList.contains('connection-point')) {
-                const endElementId = e.target.closest('.flowchart-element').getAttribute('data-id');
-                const endPoint = parseInt(e.target.getAttribute('data-point'));
-                
-                if (endElementId !== this.connectionStart.elementId) {
-                    this.createConnection(
-                        this.connectionStart.elementId,
-                        this.connectionStart.point,
-                        endElementId,
-                        endPoint
-                    );
-                }
-            }
-            
-            this.svg.removeChild(this.tempLine);
-            this.tempLine = null;
-            this.connectionStart = null;
-        }
+    startConnection(elementId, pointIndex, e) {
+        const elementData = this.elements.get(elementId);
+        if (!elementData) return;
         
-        this.isDragging = false;
+        this.connectionStart = {
+            elementId: elementId,
+            point: pointIndex
+        };
+        
+        const startPos = this.getConnectionPointPosition(elementData, pointIndex);
+        
+        this.tempLine = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        this.tempLine.setAttribute('x1', startPos.x);
+        this.tempLine.setAttribute('y1', startPos.y);
+        this.tempLine.setAttribute('x2', startPos.x);
+        this.tempLine.setAttribute('y2', startPos.y);
+        this.tempLine.setAttribute('stroke', '#2196F3');
+        this.tempLine.setAttribute('stroke-width', '3');
+        this.tempLine.setAttribute('stroke-dasharray', '5,5');
+        this.tempLine.style.pointerEvents = 'none';
+        
+        this.svg.appendChild(this.tempLine);
     }
 
     createConnection(startId, startPoint, endId, endPoint) {
         const connectionId = Utils.generateId();
         const startElement = this.elements.get(startId);
         const endElement = this.elements.get(endId);
+        
+        if (!startElement || !endElement) return;
         
         const startPos = this.getConnectionPointPosition(startElement, startPoint);
         const endPos = this.getConnectionPointPosition(endElement, endPoint);
@@ -292,6 +338,10 @@ class FlowchartEditor {
         line.setAttribute('y1', startPos.y);
         line.setAttribute('x2', endPos.x);
         line.setAttribute('y2', endPos.y);
+        line.setAttribute('stroke', '#333');
+        line.setAttribute('stroke-width', '2');
+        line.setAttribute('marker-end', 'url(#arrowhead)');
+        line.style.pointerEvents = 'none'; // Las líneas no bloquean eventos
         
         this.connections.set(connectionId, {
             line: line,
@@ -301,7 +351,18 @@ class FlowchartEditor {
             endPoint: endPoint
         });
         
-        this.svg.insertBefore(line, this.svg.firstChild);
+        // Insertar líneas ANTES de los elementos para que no bloqueen
+        const defs = this.svg.querySelector('defs');
+        if (defs && defs.nextSibling) {
+            this.svg.insertBefore(line, defs.nextSibling);
+        } else {
+            this.svg.appendChild(line);
+        }
+        
+        // Asegurar que los elementos estén al frente
+        this.elements.forEach((elementData) => {
+            this.svg.appendChild(elementData.element);
+        });
     }
 
     getConnectionPointPosition(elementData, pointIndex) {
@@ -328,11 +389,15 @@ class FlowchartEditor {
 
     moveElement(id, x, y) {
         const elementData = this.elements.get(id);
+        if (!elementData) return;
+        
         elementData.x = x;
         elementData.y = y;
         elementData.element.setAttribute('transform', `translate(${x}, ${y})`);
         
-        // Update connections
+        // Mantener el elemento al frente
+        this.svg.appendChild(elementData.element);
+        
         this.updateConnections(id);
     }
 
@@ -340,39 +405,43 @@ class FlowchartEditor {
         this.connections.forEach((connection) => {
             if (connection.startId === elementId) {
                 const startElement = this.elements.get(elementId);
-                const startPos = this.getConnectionPointPosition(startElement, connection.startPoint);
-                connection.line.setAttribute('x1', startPos.x);
-                connection.line.setAttribute('y1', startPos.y);
+                if (startElement) {
+                    const startPos = this.getConnectionPointPosition(startElement, connection.startPoint);
+                    connection.line.setAttribute('x1', startPos.x);
+                    connection.line.setAttribute('y1', startPos.y);
+                }
             }
             
             if (connection.endId === elementId) {
                 const endElement = this.elements.get(elementId);
-                const endPos = this.getConnectionPointPosition(endElement, connection.endPoint);
-                connection.line.setAttribute('x2', endPos.x);
-                connection.line.setAttribute('y2', endPos.y);
+                if (endElement) {
+                    const endPos = this.getConnectionPointPosition(endElement, connection.endPoint);
+                    connection.line.setAttribute('x2', endPos.x);
+                    connection.line.setAttribute('y2', endPos.y);
+                }
             }
         });
     }
 
     selectElement(id) {
-        // Deselect previous
         if (this.selectedElement) {
             const prevElement = this.elements.get(this.selectedElement);
-            if (prevElement) {
+            if (prevElement && prevElement.element) {
                 prevElement.element.classList.remove('selected');
             }
         }
         
-        // Select new
         this.selectedElement = id;
         const element = this.elements.get(id);
-        if (element) {
+        if (element && element.element) {
             element.element.classList.add('selected');
         }
     }
 
     editElementText(id) {
         const elementData = this.elements.get(id);
+        if (!elementData) return;
+        
         const textElement = elementData.element.querySelector('.element-text');
         const currentText = textElement.textContent;
         
@@ -392,29 +461,21 @@ class FlowchartEditor {
         }
     }
 
-    handleKeyDown(e) {
-        if (e.key === 'Delete' && this.selectedElement) {
-            this.deleteElement(this.selectedElement);
-        } else if (e.key === 'Escape') {
-            this.selectedElement = null;
-            this.currentTool = null;
-            this.updateCursor();
-        }
-    }
-
     deleteElement(id) {
         const elementData = this.elements.get(id);
-        if (elementData) {
-            // Remove connections
+        if (elementData && elementData.element) {
             this.connections.forEach((connection, connectionId) => {
                 if (connection.startId === id || connection.endId === id) {
-                    this.svg.removeChild(connection.line);
+                    if (connection.line && connection.line.parentNode) {
+                        this.svg.removeChild(connection.line);
+                    }
                     this.connections.delete(connectionId);
                 }
             });
             
-            // Remove element
-            this.svg.removeChild(elementData.element);
+            if (elementData.element.parentNode) {
+                this.svg.removeChild(elementData.element);
+            }
             this.elements.delete(id);
             this.selectedElement = null;
         }
@@ -465,31 +526,40 @@ class FlowchartEditor {
     importData(data) {
         this.clear();
         
-        // Import elements
-        Object.entries(data.elements).forEach(([id, elementData]) => {
+        const elementMap = new Map();
+        Object.entries(data.elements || {}).forEach(([id, elementData]) => {
             this.createElement(elementData.type, elementData.x, elementData.y);
-            const lastElement = Array.from(this.elements.keys()).pop();
+            const lastElementId = Array.from(this.elements.keys()).pop();
             
-            // Update the element data
-            const element = this.elements.get(lastElement);
-            element.text = elementData.text;
-            const textElement = element.element.querySelector('.element-text');
-            textElement.textContent = elementData.text;
-            
-            // Update the map with correct ID
-            this.elements.delete(lastElement);
-            this.elements.set(id, element);
-            element.element.setAttribute('data-id', id);
+            if (lastElementId) {
+                const element = this.elements.get(lastElementId);
+                if (element) {
+                    element.text = elementData.text;
+                    const textElement = element.element.querySelector('.element-text');
+                    if (textElement) {
+                        textElement.textContent = elementData.text;
+                    }
+                    
+                    elementMap.set(id, lastElementId);
+                    this.elements.delete(lastElementId);
+                    this.elements.set(id, element);
+                    element.element.setAttribute('data-id', id);
+                }
+            }
         });
         
-        // Import connections
-        Object.entries(data.connections).forEach(([id, connectionData]) => {
-            this.createConnection(
-                connectionData.startId,
-                connectionData.startPoint,
-                connectionData.endId,
-                connectionData.endPoint
-            );
+        Object.entries(data.connections || {}).forEach(([id, connectionData]) => {
+            const startExists = this.elements.has(connectionData.startId);
+            const endExists = this.elements.has(connectionData.endId);
+            
+            if (startExists && endExists) {
+                this.createConnection(
+                    connectionData.startId,
+                    connectionData.startPoint,
+                    connectionData.endId,
+                    connectionData.endPoint
+                );
+            }
         });
     }
 }

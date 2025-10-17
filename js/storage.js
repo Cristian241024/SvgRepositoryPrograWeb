@@ -81,7 +81,7 @@ class StorageManager {
                 const data = window.flowchartEditor.exportData();
                 this.autoSave(data);
             }
-        }, 30000); // Auto-save every 30 seconds
+        }, 30000);
     }
 
     stopAutoSave() {
