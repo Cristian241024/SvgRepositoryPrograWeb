@@ -9,6 +9,7 @@ class FlowchartEditor {
         this.dragOffset = { x: 0, y: 0 };
         this.connectionStart = null;
         this.tempLine = null;
+        this.editingElementId = null;
         
         this.handleCanvasClick = this.handleCanvasClick.bind(this);
         this.handleMouseDown = this.handleMouseDown.bind(this);
@@ -17,6 +18,7 @@ class FlowchartEditor {
         this.handleKeyDown = this.handleKeyDown.bind(this);
         
         this.initializeEventListeners();
+        this.initializeTextEditModal();
     }
 
     initializeEventListeners() {
@@ -26,6 +28,43 @@ class FlowchartEditor {
         this.svg.addEventListener('mouseup', this.handleMouseUp);
         this.svg.addEventListener('contextmenu', (e) => e.preventDefault());
         document.addEventListener('keydown', this.handleKeyDown);
+    }
+
+    initializeTextEditModal() {
+        // Usar setTimeout para asegurar que el DOM esté cargado
+        setTimeout(() => {
+            const confirmBtn = document.getElementById('confirm-edit');
+            const cancelBtn = document.getElementById('cancel-edit');
+            const textInput = document.getElementById('element-text-input');
+            
+            if (confirmBtn) {
+                confirmBtn.addEventListener('click', () => {
+                    this.saveElementText();
+                });
+            } else {
+                console.warn('Confirm edit button not found');
+            }
+            
+            if (cancelBtn) {
+                cancelBtn.addEventListener('click', () => {
+                    this.cancelEditText();
+                });
+            } else {
+                console.warn('Cancel edit button not found');
+            }
+            
+            if (textInput) {
+                textInput.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter' && e.ctrlKey) {
+                        this.saveElementText();
+                    } else if (e.key === 'Escape') {
+                        this.cancelEditText();
+                    }
+                });
+            } else {
+                console.warn('Text input not found');
+            }
+        }, 0);
     }
 
     setTool(tool) {
@@ -54,16 +93,21 @@ class FlowchartEditor {
     }
 
     handleCanvasClick(e) {
-        if (e.target === this.svg && this.currentTool && this.currentTool !== 'connector') {
-            const pos = Utils.getMousePosition(e, this.svg);
-            this.createElement(this.currentTool, pos.x, pos.y);
+        if (e.target === this.svg) {
+            if (this.currentTool && this.currentTool !== 'connector') {
+                // Crear nuevo elemento
+                const pos = Utils.getMousePosition(e, this.svg);
+                this.createElement(this.currentTool, pos.x, pos.y);
+            } else {
+                // Deseleccionar elemento al hacer click en canvas vacío
+                this.deselectElement();
+            }
         }
     }
 
     handleMouseDown(e) {
         e.preventDefault();
         
-        // Check if clicking on a connection point
         const connectionPoint = e.target.closest('.connection-point');
         const element = e.target.closest('.flowchart-element');
         
@@ -123,6 +167,18 @@ class FlowchartEditor {
         if (e.key === 'Delete' && this.selectedElement) {
             this.deleteElement(this.selectedElement);
         } else if (e.key === 'Escape') {
+            if (this.selectedElement) {
+                const element = this.elements.get(this.selectedElement);
+                if (element && element.element) {
+                    element.element.classList.remove('selected');
+                    const text = element.element.querySelector('.element-text');
+                    if (text) {
+                        text.style.fill = '#333';
+                        text.style.fontWeight = 'normal';
+                    }
+                }
+            }
+            
             this.selectedElement = null;
             this.currentTool = null;
             this.updateCursor();
@@ -130,8 +186,19 @@ class FlowchartEditor {
         }
     }
 
+    getDefaultText(type) {
+        switch (type) {
+            case 'start': return 'Inicio';
+            case 'process': return 'Proceso';
+            case 'decision': return '¿Decisión?';
+            default: return 'Texto';
+        }
+    }
+
     createElement(type, x, y) {
         const id = Utils.generateId();
+        console.log('Creating element with ID:', id);
+        
         let element;
 
         switch (type) {
@@ -156,7 +223,9 @@ class FlowchartEditor {
             text: this.getDefaultText(type)
         });
 
-        // Asegurar que el nuevo elemento esté al frente
+        console.log('Element created and stored:', id);
+        console.log('Current elements in map:', Array.from(this.elements.keys()));
+
         this.svg.appendChild(element);
         this.selectElement(id);
     }
@@ -263,21 +332,36 @@ class FlowchartEditor {
     }
 
     addElementEventListeners(element, id) {
-        // Hacer que el grupo sea clickeable
         element.style.pointerEvents = 'all';
         
+        // Usar arrow function para mantener el contexto
         element.addEventListener('dblclick', (e) => {
             e.stopPropagation();
             e.preventDefault();
+            
+            // Buscar el ID desde el elemento DOM directamente
+            const actualId = element.getAttribute('data-id');
+            console.log('Double-click on element:', actualId);
+            
             if (this.currentTool !== 'connector') {
-                this.editElementText(id);
+                // Verificar que el elemento existe en el Map
+                if (this.elements.has(actualId)) {
+                    this.editElementText(actualId);
+                } else {
+                    console.error('Element not in map:', actualId, 'Available:', Array.from(this.elements.keys()));
+                }
             }
         });
 
         element.addEventListener('click', (e) => {
             e.stopPropagation();
+            
+            const actualId = element.getAttribute('data-id');
+            
             if (this.currentTool !== 'connector') {
-                this.selectElement(id);
+                if (this.elements.has(actualId)) {
+                    this.selectElement(actualId);
+                }
             }
         });
     }
@@ -341,7 +425,7 @@ class FlowchartEditor {
         line.setAttribute('stroke', '#333');
         line.setAttribute('stroke-width', '2');
         line.setAttribute('marker-end', 'url(#arrowhead)');
-        line.style.pointerEvents = 'none'; // Las líneas no bloquean eventos
+        line.style.pointerEvents = 'none';
         
         this.connections.set(connectionId, {
             line: line,
@@ -351,7 +435,6 @@ class FlowchartEditor {
             endPoint: endPoint
         });
         
-        // Insertar líneas ANTES de los elementos para que no bloqueen
         const defs = this.svg.querySelector('defs');
         if (defs && defs.nextSibling) {
             this.svg.insertBefore(line, defs.nextSibling);
@@ -359,7 +442,6 @@ class FlowchartEditor {
             this.svg.appendChild(line);
         }
         
-        // Asegurar que los elementos estén al frente
         this.elements.forEach((elementData) => {
             this.svg.appendChild(elementData.element);
         });
@@ -395,9 +477,7 @@ class FlowchartEditor {
         elementData.y = y;
         elementData.element.setAttribute('transform', `translate(${x}, ${y})`);
         
-        // Mantener el elemento al frente
         this.svg.appendChild(elementData.element);
-        
         this.updateConnections(id);
     }
 
@@ -424,46 +504,152 @@ class FlowchartEditor {
     }
 
     selectElement(id) {
+        console.log('Selecting element:', id);
+        
         if (this.selectedElement) {
             const prevElement = this.elements.get(this.selectedElement);
             if (prevElement && prevElement.element) {
                 prevElement.element.classList.remove('selected');
+                const prevText = prevElement.element.querySelector('.element-text');
+                if (prevText) {
+                    prevText.style.fill = '#333';
+                    prevText.style.fontWeight = 'normal';
+                }
             }
         }
         
         this.selectedElement = id;
         const element = this.elements.get(id);
+        
         if (element && element.element) {
             element.element.classList.add('selected');
+            const text = element.element.querySelector('.element-text');
+            if (text) {
+                text.style.fill = '#2196F3';
+                text.style.fontWeight = 'bold';
+            }
+            
+            // Habilitar botón de eliminar si existe
+            const deleteBtn = document.getElementById('btn-delete');
+            if (deleteBtn) {
+                deleteBtn.disabled = false;
+            }
+        } else {
+            console.warn('Element not found when selecting:', id);
+        }
+    }
+
+    deselectElement() {
+        if (this.selectedElement) {
+            const element = this.elements.get(this.selectedElement);
+            if (element && element.element) {
+                element.element.classList.remove('selected');
+                const text = element.element.querySelector('.element-text');
+                if (text) {
+                    text.style.fill = '#333';
+                    text.style.fontWeight = 'normal';
+                }
+            }
+            this.selectedElement = null;
+            console.log('Element deselected');
+            
+            // Deshabilitar botón de eliminar si existe
+            const deleteBtn = document.getElementById('btn-delete');
+            if (deleteBtn) {
+                deleteBtn.disabled = true;
+            }
         }
     }
 
     editElementText(id) {
-        const elementData = this.elements.get(id);
-        if (!elementData) return;
+        console.log('Attempting to edit element:', id);
+        console.log('Available elements:', Array.from(this.elements.keys()));
         
+        const elementData = this.elements.get(id);
+        
+        if (!elementData) {
+            console.error('Element not found in Map:', id);
+            console.error('Map contents:', this.elements);
+            alert('Error: Elemento no encontrado. Por favor, intenta de nuevo.');
+            return;
+        }
+        
+        this.editingElementId = id;
         const textElement = elementData.element.querySelector('.element-text');
+        
+        if (!textElement) {
+            console.error('Text element not found in SVG');
+            return;
+        }
+        
         const currentText = textElement.textContent;
         
-        const newText = prompt('Editar texto:', currentText);
-        if (newText !== null && newText.trim() !== '') {
-            textElement.textContent = newText.trim();
-            elementData.text = newText.trim();
+        const textInput = document.getElementById('element-text-input');
+        const modal = document.getElementById('edit-text-modal');
+        
+        if (!textInput) {
+            console.error('Text input element not found');
+            alert('Error: Modal de edición no encontrado');
+            return;
         }
+        
+        if (!modal) {
+            console.error('Modal element not found');
+            alert('Error: Modal no encontrado');
+            return;
+        }
+        
+        console.log('Opening modal for:', id, 'with text:', currentText);
+        textInput.value = currentText;
+        Utils.showModal('edit-text-modal');
+        
+        setTimeout(() => {
+            textInput.focus();
+            textInput.select();
+        }, 100);
     }
 
-    getDefaultText(type) {
-        switch (type) {
-            case 'start': return 'Inicio';
-            case 'process': return 'Proceso';
-            case 'decision': return '¿Decisión?';
-            default: return 'Texto';
+    saveElementText() {
+        if (!this.editingElementId) {
+            console.warn('No element is being edited');
+            return;
         }
+        
+        const elementData = this.elements.get(this.editingElementId);
+        if (!elementData) {
+            console.error('Element data not found for:', this.editingElementId);
+            return;
+        }
+        
+        const textInput = document.getElementById('element-text-input');
+        if (!textInput) {
+            console.error('Text input not found');
+            return;
+        }
+        
+        const newText = textInput.value.trim();
+        
+        if (newText !== '') {
+            const textElement = elementData.element.querySelector('.element-text');
+            textElement.textContent = newText;
+            elementData.text = newText;
+            console.log('Text updated to:', newText);
+        }
+        
+        Utils.hideModal('edit-text-modal');
+        this.editingElementId = null;
+    }
+
+    cancelEditText() {
+        console.log('Edit cancelled');
+        Utils.hideModal('edit-text-modal');
+        this.editingElementId = null;
     }
 
     deleteElement(id) {
         const elementData = this.elements.get(id);
         if (elementData && elementData.element) {
+            // Remove connections
             this.connections.forEach((connection, connectionId) => {
                 if (connection.startId === id || connection.endId === id) {
                     if (connection.line && connection.line.parentNode) {
@@ -473,11 +659,24 @@ class FlowchartEditor {
                 }
             });
             
+            // Remove element
             if (elementData.element.parentNode) {
                 this.svg.removeChild(elementData.element);
             }
             this.elements.delete(id);
-            this.selectedElement = null;
+            
+            // Clear selection
+            if (this.selectedElement === id) {
+                this.selectedElement = null;
+                
+                // Deshabilitar botón de eliminar
+                const deleteBtn = document.getElementById('btn-delete');
+                if (deleteBtn) {
+                    deleteBtn.disabled = true;
+                }
+            }
+            
+            console.log('Element deleted:', id);
         }
     }
 
@@ -526,40 +725,90 @@ class FlowchartEditor {
     importData(data) {
         this.clear();
         
-        const elementMap = new Map();
-        Object.entries(data.elements || {}).forEach(([id, elementData]) => {
-            this.createElement(elementData.type, elementData.x, elementData.y);
-            const lastElementId = Array.from(this.elements.keys()).pop();
-            
-            if (lastElementId) {
-                const element = this.elements.get(lastElementId);
-                if (element) {
-                    element.text = elementData.text;
-                    const textElement = element.element.querySelector('.element-text');
-                    if (textElement) {
-                        textElement.textContent = elementData.text;
-                    }
-                    
-                    elementMap.set(id, lastElementId);
-                    this.elements.delete(lastElementId);
-                    this.elements.set(id, element);
-                    element.element.setAttribute('data-id', id);
-                }
+        if (!data || !data.elements) {
+            console.error('Invalid import data:', data);
+            return;
+        }
+        
+        console.log('Importing data with elements:', Object.keys(data.elements).length);
+        
+        // PASO 1: Crear elementos directamente con sus IDs originales
+        Object.entries(data.elements).forEach(([originalId, elementData]) => {
+            if (!elementData.type || elementData.x === undefined || elementData.y === undefined) {
+                console.warn('Skipping invalid element:', originalId, elementData);
+                return;
             }
+            
+            console.log('Creating element:', originalId, elementData.type);
+            
+            // Crear el elemento SVG con el ID original desde el inicio
+            let element;
+            switch (elementData.type) {
+                case 'start':
+                    element = this.createStartElement(originalId, elementData.x, elementData.y);
+                    break;
+                case 'process':
+                    element = this.createProcessElement(originalId, elementData.x, elementData.y);
+                    break;
+                case 'decision':
+                    element = this.createDecisionElement(originalId, elementData.x, elementData.y);
+                    break;
+                default:
+                    console.warn('Unknown element type:', elementData.type);
+                    return;
+            }
+            
+            // Guardar directamente con el ID original
+            this.elements.set(originalId, {
+                type: elementData.type,
+                element: element,
+                x: elementData.x,
+                y: elementData.y,
+                text: elementData.text || this.getDefaultText(elementData.type)
+            });
+            
+            // Actualizar el texto del elemento
+            const textElement = element.querySelector('.element-text');
+            if (textElement && elementData.text) {
+                textElement.textContent = elementData.text;
+            }
+            
+            // Agregar al SVG
+            this.svg.appendChild(element);
+            
+            console.log('Element created successfully:', originalId);
         });
         
-        Object.entries(data.connections || {}).forEach(([id, connectionData]) => {
-            const startExists = this.elements.has(connectionData.startId);
-            const endExists = this.elements.has(connectionData.endId);
+        console.log('Elements imported:', Array.from(this.elements.keys()));
+        
+        // PASO 2: Crear conexiones
+        if (data.connections && Object.keys(data.connections).length > 0) {
+            console.log('Importing connections:', Object.keys(data.connections).length);
             
-            if (startExists && endExists) {
-                this.createConnection(
-                    connectionData.startId,
-                    connectionData.startPoint,
-                    connectionData.endId,
-                    connectionData.endPoint
-                );
-            }
-        });
+            Object.entries(data.connections).forEach(([connectionId, connectionData]) => {
+                const startExists = this.elements.has(connectionData.startId);
+                const endExists = this.elements.has(connectionData.endId);
+                
+                if (startExists && endExists) {
+                    this.createConnection(
+                        connectionData.startId,
+                        connectionData.startPoint,
+                        connectionData.endId,
+                        connectionData.endPoint
+                    );
+                    console.log('Connection created:', connectionId);
+                } else {
+                    console.warn('Skipping connection - missing elements:', {
+                        connectionId,
+                        startExists,
+                        endExists,
+                        startId: connectionData.startId,
+                        endId: connectionData.endId
+                    });
+                }
+            });
+        }
+        
+        console.log('Import complete. Total elements:', this.elements.size);
     }
 }

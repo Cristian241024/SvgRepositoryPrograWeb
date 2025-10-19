@@ -20,6 +20,7 @@
                 <button id="btn-connector" class="tool-btn" data-tool="connector">Conector</button>
             </div>
             <div class="toolbar-section">
+                <button id="btn-delete" class="action-btn danger" disabled title="Eliminar elemento seleccionado (Supr)">🗑️ Eliminar</button>
                 <button id="btn-save" class="action-btn">Guardar</button>
                 <button id="btn-load" class="action-btn">Cargar</button>
                 <button id="btn-export" class="action-btn">Exportar JSON</button>
@@ -58,6 +59,17 @@
                 <div id="saved-diagrams"></div>
                 <div class="modal-actions">
                     <button id="cancel-load" class="action-btn">Cancelar</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="edit-text-modal" class="modal">
+            <div class="modal-content">
+                <h3>Editar Texto del Elemento</h3>
+                <textarea id="element-text-input" rows="3" placeholder="Ingresa el texto..."></textarea>
+                <div class="modal-actions">
+                    <button id="confirm-edit" class="action-btn">Guardar</button>
+                    <button id="cancel-edit" class="action-btn">Cancelar</button>
                 </div>
             </div>
         </div>

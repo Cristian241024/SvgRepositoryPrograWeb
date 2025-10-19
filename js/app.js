@@ -24,6 +24,7 @@ class App {
             });
         });
 
+        document.getElementById('btn-delete').addEventListener('click', () => this.deleteSelectedElement());
         document.getElementById('btn-save').addEventListener('click', () => this.showSaveModal());
         document.getElementById('btn-load').addEventListener('click', () => this.showLoadModal());
         document.getElementById('btn-export').addEventListener('click', () => this.exportDiagram());
@@ -160,21 +161,26 @@ class App {
     handleFileImport(e) {
         const file = e.target.files[0];
         
-        if (file && file.type === 'application/json') {
+        if (file) {
             const reader = new FileReader();
             
             reader.onload = (event) => {
                 try {
                     const data = JSON.parse(event.target.result);
                     
-                    if (data.diagram && data.diagram.elements && data.diagram.connections) {
+                    // Soportar ambos formatos: con o sin wrapper "diagram"
+                    if (data.diagram) {
                         this.flowchartEditor.importData(data.diagram);
-                        this.showNotification('Diagrama importado exitosamente', 'success');
+                    } else if (data.elements && data.connections) {
+                        this.flowchartEditor.importData(data);
                     } else {
                         throw new Error('Formato de archivo inválido');
                     }
+                    
+                    this.showNotification('Diagrama importado exitosamente', 'success');
                 } catch (error) {
                     alert('Error al importar el archivo: ' + error.message);
+                    console.error('Error details:', error);
                 }
             };
             
@@ -255,6 +261,20 @@ class App {
                 }
             }, 300);
         }, 3000);
+    }
+
+    deleteSelectedElement() {
+        if (this.flowchartEditor.selectedElement) {
+            const elementData = this.flowchartEditor.elements.get(this.flowchartEditor.selectedElement);
+            const elementType = elementData ? elementData.type : 'elemento';
+            
+            if (confirm(`¿Eliminar este ${elementType}?`)) {
+                this.flowchartEditor.deleteElement(this.flowchartEditor.selectedElement);
+                this.showNotification('Elemento eliminado', 'success');
+            }
+        } else {
+            this.showNotification('No hay ningún elemento seleccionado', 'warning');
+        }
     }
 }
 

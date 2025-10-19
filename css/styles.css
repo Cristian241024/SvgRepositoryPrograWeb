@@ -82,6 +82,21 @@ body {
     background: #d32f2f;
 }
 
+.action-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background: #ccc;
+}
+
+.action-btn.danger:disabled {
+    background: #ddd;
+}
+
+.action-btn:disabled:hover {
+    transform: none;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
 .main-content {
     overflow: hidden;
     position: relative;
@@ -117,14 +132,21 @@ body {
     stroke-width: 3;
 }
 
+.flowchart-element.selected .element-text {
+    fill: #2196F3;
+    font-weight: bold;
+}
+
 .element-text {
     font-family: 'Segoe UI', sans-serif;
     font-size: 14px;
     text-anchor: middle;
     dominant-baseline: middle;
     fill: #333;
+    font-weight: normal;
     pointer-events: none; /* El texto no bloquea doble-click */
     user-select: none;
+    transition: fill 0.3s ease, font-weight 0.3s ease;
 }
 
 .connector-line {
@@ -172,6 +194,23 @@ body {
 }
 
 .modal-content input:focus {
+    outline: none;
+    border-color: #2196F3;
+}
+
+.modal-content textarea {
+    width: 100%;
+    padding: 0.75rem;
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    font-size: 1rem;
+    margin-bottom: 1rem;
+    font-family: 'Segoe UI', sans-serif;
+    resize: vertical;
+    min-height: 80px;
+}
+
+.modal-content textarea:focus {
     outline: none;
     border-color: #2196F3;
 }

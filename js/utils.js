@@ -26,11 +26,23 @@ class Utils {
     }
 
     static showModal(modalId) {
-        document.getElementById(modalId).style.display = 'block';
+        const modal = document.getElementById(modalId);
+        if (modal) {
+            modal.style.display = 'block';
+            console.log('Modal shown:', modalId);
+        } else {
+            console.error('Modal not found:', modalId);
+        }
     }
 
     static hideModal(modalId) {
-        document.getElementById(modalId).style.display = 'none';
+        const modal = document.getElementById(modalId);
+        if (modal) {
+            modal.style.display = 'none';
+            console.log('Modal hidden:', modalId);
+        } else {
+            console.error('Modal not found:', modalId);
+        }
     }
 
     static formatDate(date) {
