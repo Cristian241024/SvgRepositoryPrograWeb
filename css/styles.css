@@ -4,11 +4,27 @@
     box-sizing: border-box;
 }
 
+:root {
+    --primary-color: #5856d6;
+    --primary-hover: #4745b8;
+    --danger-color: #ff3b30;
+    --danger-hover: #e02620;
+    --success-color: #34c759;
+    --bg-light: #f5f5f7;
+    --bg-white: #ffffff;
+    --text-primary: #1d1d1f;
+    --text-secondary: #6e6e73;
+    --border-color: #d2d2d7;
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.08);
+    --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.12);
+}
+
 body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    background: var(--bg-light);
     height: 100vh;
     overflow: hidden;
+    color: var(--text-primary);
 }
 
 .app-container {
@@ -17,22 +33,31 @@ body {
     height: 100vh;
 }
 
+/* ========== TOOLBAR ========== */
 .toolbar {
-    background: rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(10px);
-    padding: 1rem;
+    background: var(--bg-white);
+    padding: 0.75rem 1.5rem;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-    flex-wrap: wrap;
-    gap: 1rem;
+    box-shadow: var(--shadow-sm);
+    border-bottom: 1px solid var(--border-color);
+    position: relative;
+    z-index: 100;
 }
 
-.toolbar h1 {
-    color: #333;
-    font-size: 1.5rem;
+.toolbar-title h1 {
+    color: var(--text-primary);
+    font-size: 1.25rem;
     font-weight: 600;
+    letter-spacing: -0.02em;
+    margin: 0;
+}
+
+.toolbar-divider {
+    width: 1px;
+    height: 32px;
+    background: var(--border-color);
 }
 
 .toolbar-section {
@@ -41,110 +66,200 @@ body {
     align-items: center;
 }
 
-.tool-btn, .action-btn {
-    padding: 0.5rem 1rem;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    font-weight: 500;
-    transition: all 0.3s ease;
-    background: #fff;
-    color: #333;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+.toolbar-group {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.25rem;
 }
 
-.tool-btn:hover {
-    background: #f0f8ff;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+.toolbar-label {
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.25rem;
+}
+
+.toolbar-group .action-btn,
+.toolbar-group .tool-btn {
+    margin-top: 0;
+}
+
+/* Botón hamburguesa (oculto en desktop) */
+.hamburger-btn {
+    display: none;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0.5rem;
+    color: var(--text-primary);
+    transition: all 0.2s ease;
+}
+
+.hamburger-btn:hover {
+    color: var(--primary-color);
+}
+
+/* Navegación principal */
+.toolbar-nav {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.nav-group {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.nav-divider {
+    width: 1px;
+    height: 28px;
+    background: var(--border-color);
+}
+
+/* ========== BUTTONS ========== */
+.tool-btn, .action-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 0.875rem;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 500;
+    font-size: 0.875rem;
+    transition: all 0.2s ease;
+    background: var(--bg-white);
+    color: var(--text-primary);
+    white-space: nowrap;
+}
+
+.tool-btn svg,
+.action-btn svg {
+    flex-shrink: 0;
+}
+
+.tool-btn:hover,
+.action-btn:hover {
+    background: var(--bg-light);
+    border-color: var(--primary-color);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
+}
+
+.tool-btn:active,
+.action-btn:active {
+    transform: translateY(0);
 }
 
 .tool-btn.active {
-    background: #4CAF50;
+    background: var(--primary-color);
     color: white;
+    border-color: var(--primary-color);
 }
 
-.action-btn {
-    background: #2196F3;
-    color: white;
-}
-
-.action-btn:hover {
-    background: #1976D2;
-    transform: translateY(-2px);
-}
-
-.action-btn.danger {
-    background: #f44336;
-}
-
-.action-btn.danger:hover {
-    background: #d32f2f;
+.tool-btn.active svg {
+    stroke: white;
 }
 
 .action-btn:disabled {
-    opacity: 0.5;
+    opacity: 0.4;
     cursor: not-allowed;
-    background: #ccc;
-}
-
-.action-btn.danger:disabled {
-    background: #ddd;
+    background: var(--bg-light);
+    border-color: var(--border-color);
 }
 
 .action-btn:disabled:hover {
     transform: none;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    box-shadow: none;
+    border-color: var(--border-color);
 }
 
+.btn-delete {
+    color: var(--danger-color);
+}
+
+.btn-delete:hover:not(:disabled) {
+    background: #fff5f5;
+    border-color: var(--danger-color);
+}
+
+.btn-clear {
+    color: var(--danger-color);
+}
+
+.btn-clear:hover {
+    background: #fff5f5;
+    border-color: var(--danger-color);
+}
+
+/* ========== CANVAS ========== */
 .main-content {
     overflow: hidden;
     position: relative;
+    background: var(--bg-light);
 }
 
 .canvas-container {
     width: 100%;
     height: 100%;
-    background: #ffffff;
+    background: var(--bg-white);
     position: relative;
     cursor: crosshair;
+    overflow: auto;
+    -webkit-overflow-scrolling: touch;
 }
 
 #flowchart-canvas {
-    width: 100%;
-    height: 100%;
-    background: radial-gradient(circle, #f8f9fa 1px, transparent 1px);
+    min-width: 100%;
+    min-height: 100%;
+    width: 2000px;
+    height: 2000px;
+    background: radial-gradient(circle, #e8e8e8 1px, transparent 1px);
     background-size: 20px 20px;
+    touch-action: none;
+    -webkit-user-select: none;
+    user-select: none;
 }
 
+/* ========== FLOWCHART ELEMENTS ========== */
 .flowchart-element {
     cursor: move;
     transition: all 0.2s ease;
-    pointer-events: all; /* Los elementos capturan eventos */
+    pointer-events: all;
+    touch-action: none;
 }
 
 .flowchart-element:hover {
-    filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.2));
+    filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.15));
+}
+
+.flowchart-element:active {
+    opacity: 0.9;
 }
 
 .flowchart-element.selected {
-    stroke: #2196F3;
+    stroke: var(--primary-color);
     stroke-width: 3;
 }
 
 .flowchart-element.selected .element-text {
-    fill: #2196F3;
+    fill: var(--primary-color);
     font-weight: bold;
 }
 
 .element-text {
-    font-family: 'Segoe UI', sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     font-size: 14px;
     text-anchor: middle;
     dominant-baseline: middle;
-    fill: #333;
+    fill: var(--text-primary);
     font-weight: normal;
-    pointer-events: none; /* El texto no bloquea doble-click */
+    pointer-events: none;
     user-select: none;
     transition: fill 0.3s ease, font-weight 0.3s ease;
 }
@@ -154,9 +269,31 @@ body {
     stroke-width: 2;
     fill: none;
     marker-end: url(#arrowhead);
-    pointer-events: none; /* Las líneas no interfieren con clicks */
+    pointer-events: none;
 }
 
+.connection-point {
+    fill: var(--primary-color);
+    stroke: white;
+    stroke-width: 2;
+    r: 6;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    cursor: pointer;
+    pointer-events: all;
+    touch-action: none;
+}
+
+.flowchart-element:hover .connection-point {
+    opacity: 1;
+}
+
+.connection-point:hover {
+    fill: var(--success-color);
+    r: 8;
+}
+
+/* ========== MODALS ========== */
 .modal {
     display: none;
     position: fixed;
@@ -176,93 +313,71 @@ body {
     border-radius: 12px;
     width: 90%;
     max-width: 500px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
 }
 
 .modal-content h3 {
     margin-bottom: 1rem;
-    color: #333;
+    color: var(--text-primary);
+    font-weight: 600;
 }
 
-.modal-content input {
-    width: 100%;
-    padding: 0.75rem;
-    border: 2px solid #ddd;
-    border-radius: 8px;
-    font-size: 1rem;
-    margin-bottom: 1rem;
-}
-
-.modal-content input:focus {
-    outline: none;
-    border-color: #2196F3;
-}
-
+.modal-content input,
 .modal-content textarea {
     width: 100%;
     padding: 0.75rem;
-    border: 2px solid #ddd;
+    border: 1px solid var(--border-color);
     border-radius: 8px;
     font-size: 1rem;
     margin-bottom: 1rem;
-    font-family: 'Segoe UI', sans-serif;
+    font-family: inherit;
     resize: vertical;
     min-height: 80px;
 }
 
+.modal-content input:focus,
 .modal-content textarea:focus {
     outline: none;
-    border-color: #2196F3;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(88, 86, 214, 0.1);
 }
 
 .modal-actions {
     display: flex;
-    gap: 1rem;
+    gap: 0.75rem;
     justify-content: flex-end;
 }
 
 .saved-diagram {
     padding: 1rem;
-    border: 2px solid #ddd;
+    border: 1px solid var(--border-color);
     border-radius: 8px;
     margin-bottom: 0.5rem;
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: all 0.2s ease;
     display: flex;
     justify-content: space-between;
     align-items: center;
+    background: var(--bg-white);
 }
 
 .saved-diagram:hover {
-    border-color: #2196F3;
-    background: #f0f8ff;
+    border-color: var(--primary-color);
+    background: var(--bg-light);
+    box-shadow: var(--shadow-sm);
 }
 
 .delete-diagram {
-    background: #f44336;
+    background: var(--danger-color);
     color: white;
     border: none;
-    padding: 0.25rem 0.5rem;
-    border-radius: 4px;
+    padding: 0.375rem 0.75rem;
+    border-radius: 6px;
     cursor: pointer;
+    font-size: 0.875rem;
+    transition: all 0.2s ease;
 }
 
-.connection-point {
-    fill: #2196F3;
-    stroke: white;
-    stroke-width: 2;
-    r: 6;
-    opacity: 0;
-    transition: opacity 0.3s ease;
-    cursor: pointer;
-    pointer-events: all;
-}
-
-.flowchart-element:hover .connection-point {
-    opacity: 1;
-}
-
-.connection-point:hover {
-    fill: #FF9800;
-    r: 8;
+.delete-diagram:hover {
+    background: var(--danger-hover);
 }

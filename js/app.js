@@ -17,6 +17,7 @@ class App {
     }
 
     initializeEventListeners() {
+        // Botones de herramientas
         document.querySelectorAll('.tool-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 const tool = e.target.getAttribute('data-tool');
@@ -24,6 +25,7 @@ class App {
             });
         });
 
+        // Botones de acción
         document.getElementById('btn-delete').addEventListener('click', () => this.deleteSelectedElement());
         document.getElementById('btn-save').addEventListener('click', () => this.showSaveModal());
         document.getElementById('btn-load').addEventListener('click', () => this.showLoadModal());
@@ -31,18 +33,47 @@ class App {
         document.getElementById('btn-import').addEventListener('click', () => this.importDiagram());
         document.getElementById('btn-clear').addEventListener('click', () => this.clearDiagram());
 
+        // Botón hamburguesa (menú mobile)
+        const hamburgerBtn = document.getElementById('hamburger-btn');
+        const toolbarNav = document.getElementById('toolbar-nav');
+        
+        if (hamburgerBtn && toolbarNav) {
+            hamburgerBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                toolbarNav.classList.toggle('active');
+            });
+            
+            // Cerrar menú al hacer click en overlay
+            toolbarNav.addEventListener('click', (e) => {
+                if (e.target === toolbarNav || e.target.classList.contains('tool-btn') || e.target.classList.contains('action-btn')) {
+                    toolbarNav.classList.remove('active');
+                }
+            });
+            
+            // Cerrar menú al hacer click fuera
+            document.addEventListener('click', (e) => {
+                if (!hamburgerBtn.contains(e.target) && !toolbarNav.contains(e.target)) {
+                    toolbarNav.classList.remove('active');
+                }
+            });
+        }
+
+        // Modales
         document.getElementById('confirm-save').addEventListener('click', () => this.saveDiagram());
         document.getElementById('cancel-save').addEventListener('click', () => Utils.hideModal('save-modal'));
         document.getElementById('cancel-load').addEventListener('click', () => Utils.hideModal('load-modal'));
 
+        // Import file
         document.getElementById('import-file').addEventListener('change', (e) => this.handleFileImport(e));
 
+        // Cerrar modal al hacer click fuera
         document.addEventListener('click', (e) => {
             if (e.target.classList.contains('modal')) {
                 e.target.style.display = 'none';
             }
         });
 
+        // Enter en input de nombre
         document.getElementById('diagram-name').addEventListener('keypress', (e) => {
             if (e.key === 'Enter') {
                 this.saveDiagram();

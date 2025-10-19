@@ -22,12 +22,16 @@ class FlowchartEditor {
     }
 
     initializeEventListeners() {
+        // Cambiar de mouse events a pointer events (soporta mouse, touch, pen)
         this.svg.addEventListener('click', this.handleCanvasClick);
-        this.svg.addEventListener('mousedown', this.handleMouseDown);
-        this.svg.addEventListener('mousemove', this.handleMouseMove);
-        this.svg.addEventListener('mouseup', this.handleMouseUp);
+        this.svg.addEventListener('pointerdown', this.handleMouseDown);
+        this.svg.addEventListener('pointermove', this.handleMouseMove);
+        this.svg.addEventListener('pointerup', this.handleMouseUp);
         this.svg.addEventListener('contextmenu', (e) => e.preventDefault());
         document.addEventListener('keydown', this.handleKeyDown);
+        
+        // Prevenir comportamientos táctiles predeterminados en el canvas
+        this.svg.style.touchAction = 'none';
     }
 
     initializeTextEditModal() {

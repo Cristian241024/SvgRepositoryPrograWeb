@@ -10,23 +10,92 @@
 <body>
     <div class="app-container">
         <header class="toolbar">
-            <div class="toolbar-section">
+            <div class="toolbar-left">
                 <h1>Editor de Diagramas de Flujo</h1>
             </div>
-            <div class="toolbar-section">
-                <button id="btn-start" class="tool-btn" data-tool="start">Inicio/Fin</button>
-                <button id="btn-process" class="tool-btn" data-tool="process">Proceso</button>
-                <button id="btn-decision" class="tool-btn" data-tool="decision">Decisión</button>
-                <button id="btn-connector" class="tool-btn" data-tool="connector">Conector</button>
-            </div>
-            <div class="toolbar-section">
-                <button id="btn-delete" class="action-btn danger" disabled title="Eliminar elemento seleccionado (Supr)">🗑️ Eliminar</button>
-                <button id="btn-save" class="action-btn">Guardar</button>
-                <button id="btn-load" class="action-btn">Cargar</button>
-                <button id="btn-export" class="action-btn">Exportar JSON</button>
-                <button id="btn-import" class="action-btn">Importar</button>
-                <button id="btn-clear" class="action-btn danger">Limpiar</button>
-            </div>
+            
+            <!-- Botón Hamburguesa (solo visible en mobile) -->
+            <button class="hamburger-btn" id="hamburger-btn" aria-label="Menú">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="3" y1="6" x2="21" y2="6"/>
+                    <line x1="3" y1="12" x2="21" y2="12"/>
+                    <line x1="3" y1="18" x2="21" y2="18"/>
+                </svg>
+            </button>
+            
+            <!-- Menú principal -->
+            <nav class="toolbar-nav" id="toolbar-nav">
+                <div class="nav-group">
+                    <button id="btn-start" class="tool-btn" data-tool="start" title="Crear elemento Inicio/Fin">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <ellipse cx="12" cy="12" rx="10" ry="6"/>
+                        </svg>
+                        <span>Inicio/Fin</span>
+                    </button>
+                    <button id="btn-process" class="tool-btn" data-tool="process" title="Crear elemento Proceso">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="4" y="8" width="16" height="8" rx="1"/>
+                        </svg>
+                        <span>Proceso</span>
+                    </button>
+                    <button id="btn-decision" class="tool-btn" data-tool="decision" title="Crear elemento Decisión">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 4 L20 12 L12 20 L4 12 Z"/>
+                        </svg>
+                        <span>Decisión</span>
+                    </button>
+                    <button id="btn-connector" class="tool-btn" data-tool="connector" title="Conectar elementos">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M5 12 L19 12 M15 8 L19 12 L15 16"/>
+                        </svg>
+                        <span>Conector</span>
+                    </button>
+                </div>
+                
+                <div class="nav-divider"></div>
+                
+                <div class="nav-group">
+                    <button id="btn-delete" class="action-btn btn-delete" disabled title="Eliminar elemento seleccionado (Supr)">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m3 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6h14z"/>
+                        </svg>
+                        <span>Eliminar</span>
+                    </button>
+                    <button id="btn-save" class="action-btn">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/>
+                            <polyline points="17 21 17 13 7 13 7 21"/>
+                            <polyline points="7 3 7 8 15 8"/>
+                        </svg>
+                        <span>Guardar</span>
+                    </button>
+                    <button id="btn-load" class="action-btn">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M3 15v4a2 2 0 002 2h14a2 2 0 002-2v-4M17 8l-5-5-5 5M12 3v12"/>
+                        </svg>
+                        <span>Cargar</span>
+                    </button>
+                    <button id="btn-export" class="action-btn">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/>
+                        </svg>
+                        <span>Exportar</span>
+                    </button>
+                    <button id="btn-import" class="action-btn">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M3 15v4a2 2 0 002 2h14a2 2 0 002-2v-4M17 8l-5-5-5 5M12 3v12"/>
+                        </svg>
+                        <span>Importar</span>
+                    </button>
+                    <button id="btn-clear" class="action-btn btn-clear">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"/>
+                            <path d="M15 9l-6 6M9 9l6 6"/>
+                        </svg>
+                        <span>Limpiar</span>
+                    </button>
+                </div>
+            </nav>
         </header>
 
         <main class="main-content">
