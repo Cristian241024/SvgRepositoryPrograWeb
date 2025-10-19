@@ -1,7 +1,11 @@
 /* ========== TABLET ========== */
 @media (max-width: 1024px) {
+    .toolbar {
+        padding: 0.75rem 1rem;
+    }
+    
     .toolbar-nav {
-        gap: 0.75rem;
+        gap: 0.5rem;
     }
     
     .nav-group {
@@ -18,6 +22,11 @@
         width: 16px;
         height: 16px;
     }
+    
+    /* Permitir wrap de botones para que no desaparezcan */
+    .toolbar-nav {
+        max-width: 100%;
+    }
 }
 
 /* ========== MOBILE ========== */
@@ -25,37 +34,48 @@
     /* Toolbar compacto */
     .toolbar {
         padding: 0.75rem 1rem;
+        flex-direction: row-reverse;
+        justify-content: space-between;
+    }
+    
+    .toolbar-left {
+        order: 2;
+    }
+    
+    /* Mostrar botón hamburguesa al INICIO (izquierda) */
+    .hamburger-btn {
+        display: block;
+        order: 1;
     }
     
     .toolbar-left h1 {
         font-size: 1.125rem;
     }
     
-    /* Mostrar botón hamburguesa */
-    .hamburger-btn {
-        display: block;
-    }
-    
-    /* Navegación como menú lateral */
+    /* Navegación como menú lateral DESDE LA IZQUIERDA */
     .toolbar-nav {
         position: fixed;
         top: 0;
-        right: -100%;
-        width: 280px;
-        height: 100vh;
+        left: -100%;
+        width: 70%;
+        max-width: 320px;
+        height: auto;
+        max-height: 85vh;
         background: var(--bg-white);
-        box-shadow: -4px 0 20px rgba(0, 0, 0, 0.15);
+        box-shadow: 4px 0 20px rgba(0, 0, 0, 0.15);
         flex-direction: column;
         align-items: stretch;
         gap: 0;
         padding: 1rem;
         overflow-y: auto;
-        transition: right 0.3s ease;
+        transition: left 0.3s ease;
         z-index: 1000;
+        border-radius: 0 12px 12px 0;
+        margin-top: 60px;
     }
     
     .toolbar-nav.active {
-        right: 0;
+        left: 0;
     }
     
     /* Grupo de botones en columna */
@@ -138,8 +158,9 @@
     }
     
     .toolbar-nav {
-        width: 100%;
-        right: -100%;
+        width: 80%;
+        max-width: 280px;
+        left: -100%;
     }
     
     .tool-btn, .action-btn {
@@ -182,5 +203,9 @@
     .tool-btn, .action-btn {
         padding: 0.4rem 0.75rem;
         font-size: 0.8125rem;
+    }
+    
+    .toolbar-nav {
+        max-height: 70vh;
     }
 }
