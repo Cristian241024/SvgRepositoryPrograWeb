@@ -42,7 +42,7 @@
         order: 2;
     }
     
-    /* Mostrar botón hamburguesa al INICIO (izquierda) */
+    /* Mostrar botón hamburguesa al INICIO  */
     .hamburger-btn {
         display: block;
         order: 1;

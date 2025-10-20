@@ -143,6 +143,30 @@
             </div>
         </div>
 
+        <div id="delete-modal" class="modal">
+            <div class="modal-content">
+                <h3>Eliminar Elemento</h3>
+                <p>¿Estás seguro de que deseas eliminar este <strong id="delete-element-type">elemento</strong>?</p>
+                <p class="warning-text">Esta acción no se puede deshacer.</p>
+                <div class="modal-actions">
+                    <button id="confirm-delete" class="action-btn btn-delete">Eliminar</button>
+                    <button id="cancel-delete" class="action-btn">Cancelar</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="clear-modal" class="modal">
+            <div class="modal-content">
+                <h3>Limpiar Diagrama</h3>
+                <p>¿Estás seguro de que deseas limpiar todo el diagrama?</p>
+                <p class="warning-text">Se eliminarán todos los elementos y conexiones. Esta acción no se puede deshacer.</p>
+                <div class="modal-actions">
+                    <button id="confirm-clear" class="action-btn btn-clear">Limpiar Todo</button>
+                    <button id="cancel-clear" class="action-btn">Cancelar</button>
+                </div>
+            </div>
+        </div>
+
         <input type="file" id="import-file" accept=".json" style="display: none;">
     </div>
 

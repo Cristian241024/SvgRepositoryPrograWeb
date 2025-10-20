@@ -45,16 +45,12 @@ class FlowchartEditor {
                 confirmBtn.addEventListener('click', () => {
                     this.saveElementText();
                 });
-            } else {
-                console.warn('Confirm edit button not found');
             }
             
             if (cancelBtn) {
                 cancelBtn.addEventListener('click', () => {
                     this.cancelEditText();
                 });
-            } else {
-                console.warn('Cancel edit button not found');
             }
             
             if (textInput) {
@@ -65,8 +61,6 @@ class FlowchartEditor {
                         this.cancelEditText();
                     }
                 });
-            } else {
-                console.warn('Text input not found');
             }
         }, 0);
     }
@@ -201,8 +195,6 @@ class FlowchartEditor {
 
     createElement(type, x, y) {
         const id = Utils.generateId();
-        console.log('Creating element with ID:', id);
-        
         let element;
 
         switch (type) {
@@ -226,9 +218,6 @@ class FlowchartEditor {
             y: y,
             text: this.getDefaultText(type)
         });
-
-        console.log('Element created and stored:', id);
-        console.log('Current elements in map:', Array.from(this.elements.keys()));
 
         this.svg.appendChild(element);
         this.selectElement(id);
@@ -338,21 +327,15 @@ class FlowchartEditor {
     addElementEventListeners(element, id) {
         element.style.pointerEvents = 'all';
         
-        // Usar arrow function para mantener el contexto
         element.addEventListener('dblclick', (e) => {
             e.stopPropagation();
             e.preventDefault();
             
-            // Buscar el ID desde el elemento DOM directamente
             const actualId = element.getAttribute('data-id');
-            console.log('Double-click on element:', actualId);
             
             if (this.currentTool !== 'connector') {
-                // Verificar que el elemento existe en el Map
                 if (this.elements.has(actualId)) {
                     this.editElementText(actualId);
-                } else {
-                    console.error('Element not in map:', actualId, 'Available:', Array.from(this.elements.keys()));
                 }
             }
         });
@@ -508,8 +491,6 @@ class FlowchartEditor {
     }
 
     selectElement(id) {
-        console.log('Selecting element:', id);
-        
         if (this.selectedElement) {
             const prevElement = this.elements.get(this.selectedElement);
             if (prevElement && prevElement.element) {
@@ -566,14 +547,9 @@ class FlowchartEditor {
     }
 
     editElementText(id) {
-        console.log('Attempting to edit element:', id);
-        console.log('Available elements:', Array.from(this.elements.keys()));
-        
         const elementData = this.elements.get(id);
         
         if (!elementData) {
-            console.error('Element not found in Map:', id);
-            console.error('Map contents:', this.elements);
             alert('Error: Elemento no encontrado. Por favor, intenta de nuevo.');
             return;
         }
@@ -582,28 +558,18 @@ class FlowchartEditor {
         const textElement = elementData.element.querySelector('.element-text');
         
         if (!textElement) {
-            console.error('Text element not found in SVG');
             return;
         }
         
         const currentText = textElement.textContent;
-        
         const textInput = document.getElementById('element-text-input');
         const modal = document.getElementById('edit-text-modal');
         
-        if (!textInput) {
-            console.error('Text input element not found');
+        if (!textInput || !modal) {
             alert('Error: Modal de edición no encontrado');
             return;
         }
         
-        if (!modal) {
-            console.error('Modal element not found');
-            alert('Error: Modal no encontrado');
-            return;
-        }
-        
-        console.log('Opening modal for:', id, 'with text:', currentText);
         textInput.value = currentText;
         Utils.showModal('edit-text-modal');
         
@@ -615,19 +581,16 @@ class FlowchartEditor {
 
     saveElementText() {
         if (!this.editingElementId) {
-            console.warn('No element is being edited');
             return;
         }
         
         const elementData = this.elements.get(this.editingElementId);
         if (!elementData) {
-            console.error('Element data not found for:', this.editingElementId);
             return;
         }
         
         const textInput = document.getElementById('element-text-input');
         if (!textInput) {
-            console.error('Text input not found');
             return;
         }
         
@@ -637,7 +600,6 @@ class FlowchartEditor {
             const textElement = elementData.element.querySelector('.element-text');
             textElement.textContent = newText;
             elementData.text = newText;
-            console.log('Text updated to:', newText);
         }
         
         Utils.hideModal('edit-text-modal');
@@ -645,7 +607,6 @@ class FlowchartEditor {
     }
 
     cancelEditText() {
-        console.log('Edit cancelled');
         Utils.hideModal('edit-text-modal');
         this.editingElementId = null;
     }
@@ -653,7 +614,6 @@ class FlowchartEditor {
     deleteElement(id) {
         const elementData = this.elements.get(id);
         if (elementData && elementData.element) {
-            // Remove connections
             this.connections.forEach((connection, connectionId) => {
                 if (connection.startId === id || connection.endId === id) {
                     if (connection.line && connection.line.parentNode) {
@@ -663,24 +623,19 @@ class FlowchartEditor {
                 }
             });
             
-            // Remove element
             if (elementData.element.parentNode) {
                 this.svg.removeChild(elementData.element);
             }
             this.elements.delete(id);
             
-            // Clear selection
             if (this.selectedElement === id) {
                 this.selectedElement = null;
                 
-                // Deshabilitar botón de eliminar
                 const deleteBtn = document.getElementById('btn-delete');
                 if (deleteBtn) {
                     deleteBtn.disabled = true;
                 }
             }
-            
-            console.log('Element deleted:', id);
         }
     }
 
@@ -734,18 +689,13 @@ class FlowchartEditor {
             return;
         }
         
-        console.log('Importing data with elements:', Object.keys(data.elements).length);
-        
-        // PASO 1: Crear elementos directamente con sus IDs originales
+        // Crear elementos directamente con sus IDs originales
         Object.entries(data.elements).forEach(([originalId, elementData]) => {
             if (!elementData.type || elementData.x === undefined || elementData.y === undefined) {
                 console.warn('Skipping invalid element:', originalId, elementData);
                 return;
             }
             
-            console.log('Creating element:', originalId, elementData.type);
-            
-            // Crear el elemento SVG con el ID original desde el inicio
             let element;
             switch (elementData.type) {
                 case 'start':
@@ -762,7 +712,6 @@ class FlowchartEditor {
                     return;
             }
             
-            // Guardar directamente con el ID original
             this.elements.set(originalId, {
                 type: elementData.type,
                 element: element,
@@ -771,24 +720,16 @@ class FlowchartEditor {
                 text: elementData.text || this.getDefaultText(elementData.type)
             });
             
-            // Actualizar el texto del elemento
             const textElement = element.querySelector('.element-text');
             if (textElement && elementData.text) {
                 textElement.textContent = elementData.text;
             }
             
-            // Agregar al SVG
             this.svg.appendChild(element);
-            
-            console.log('Element created successfully:', originalId);
         });
         
-        console.log('Elements imported:', Array.from(this.elements.keys()));
-        
-        // PASO 2: Crear conexiones
+        // Crear conexiones
         if (data.connections && Object.keys(data.connections).length > 0) {
-            console.log('Importing connections:', Object.keys(data.connections).length);
-            
             Object.entries(data.connections).forEach(([connectionId, connectionData]) => {
                 const startExists = this.elements.has(connectionData.startId);
                 const endExists = this.elements.has(connectionData.endId);
@@ -800,7 +741,6 @@ class FlowchartEditor {
                         connectionData.endId,
                         connectionData.endPoint
                     );
-                    console.log('Connection created:', connectionId);
                 } else {
                     console.warn('Skipping connection - missing elements:', {
                         connectionId,
@@ -812,7 +752,5 @@ class FlowchartEditor {
                 }
             });
         }
-        
-        console.log('Import complete. Total elements:', this.elements.size);
     }
 }

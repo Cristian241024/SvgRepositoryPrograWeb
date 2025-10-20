@@ -63,6 +63,13 @@ class App {
         document.getElementById('cancel-save').addEventListener('click', () => Utils.hideModal('save-modal'));
         document.getElementById('cancel-load').addEventListener('click', () => Utils.hideModal('load-modal'));
 
+        // Modales de confirmación
+        document.getElementById('confirm-delete').addEventListener('click', () => this.confirmDelete());
+        document.getElementById('cancel-delete').addEventListener('click', () => Utils.hideModal('delete-modal'));
+        
+        document.getElementById('confirm-clear').addEventListener('click', () => this.confirmClear());
+        document.getElementById('cancel-clear').addEventListener('click', () => Utils.hideModal('clear-modal'));
+
         // Import file
         document.getElementById('import-file').addEventListener('change', (e) => this.handleFileImport(e));
 
@@ -224,10 +231,14 @@ class App {
     }
 
     clearDiagram() {
-        if (confirm('¿Estás seguro de que quieres limpiar el diagrama? Esta acción no se puede deshacer.')) {
-            this.flowchartEditor.clear();
-            this.showNotification('Diagrama limpiado', 'warning');
-        }
+        // Mostrar modal de confirmación
+        Utils.showModal('clear-modal');
+    }
+
+    confirmClear() {
+        this.flowchartEditor.clear();
+        Utils.hideModal('clear-modal');
+        this.showNotification('Diagrama limpiado', 'warning');
     }
 
     loadAutoSave() {
@@ -297,14 +308,38 @@ class App {
     deleteSelectedElement() {
         if (this.flowchartEditor.selectedElement) {
             const elementData = this.flowchartEditor.elements.get(this.flowchartEditor.selectedElement);
-            const elementType = elementData ? elementData.type : 'elemento';
             
-            if (confirm(`¿Eliminar este ${elementType}?`)) {
-                this.flowchartEditor.deleteElement(this.flowchartEditor.selectedElement);
-                this.showNotification('Elemento eliminado', 'success');
+            if (elementData) {
+                // Traducir tipo al español
+                let elementTypeName = 'elemento';
+                switch(elementData.type) {
+                    case 'start':
+                        elementTypeName = 'elemento Inicio/Fin';
+                        break;
+                    case 'process':
+                        elementTypeName = 'elemento Proceso';
+                        break;
+                    case 'decision':
+                        elementTypeName = 'elemento Decisión';
+                        break;
+                }
+                
+                // Actualizar texto del modal
+                document.getElementById('delete-element-type').textContent = elementTypeName;
             }
+            
+            // Mostrar modal de confirmación
+            Utils.showModal('delete-modal');
         } else {
             this.showNotification('No hay ningún elemento seleccionado', 'warning');
+        }
+    }
+
+    confirmDelete() {
+        if (this.flowchartEditor.selectedElement) {
+            this.flowchartEditor.deleteElement(this.flowchartEditor.selectedElement);
+            Utils.hideModal('delete-modal');
+            this.showNotification('Elemento eliminado', 'success');
         }
     }
 }

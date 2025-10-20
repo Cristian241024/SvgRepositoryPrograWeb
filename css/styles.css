@@ -325,6 +325,18 @@ body {
     font-weight: 600;
 }
 
+.modal-content p {
+    margin-bottom: 1rem;
+    color: var(--text-primary);
+    line-height: 1.5;
+}
+
+.modal-content .warning-text {
+    color: var(--danger-color);
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
 .modal-content input,
 .modal-content textarea {
     width: 100%;
