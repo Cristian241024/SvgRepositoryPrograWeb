@@ -170,3 +170,5 @@ const blob = new Blob([data], {type: 'application/json'});
 ✅ PointerEvents API
 ✅ CSS Grid/Flexbox
 ✅ Responsive Design
+
+https://www.youtube.com/watch?v=cABPUCioDKA&t=324s
